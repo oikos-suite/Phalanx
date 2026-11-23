@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Phalanx mark: a hoplite helmet cut from two shards, nose guard and crest diamond. -->
+  <rect width="512" height="512" rx="112" fill="#E2A93B"/>
+  <g transform="translate(0 6)">
+  <polygon points="256,52 282,84 256,114 230,84" fill="#3A2410"/>
+  <polygon points="248,120 156,156 114,266 138,382 200,452 238,404 238,314 226,296 170,296 152,266 248,266" fill="#3A2410"/>
+  <polygon points="264,266 360,266 342,296 286,296 274,314 274,404 312,452 374,382 398,266 356,156 264,120" fill="#3A2410"/>
+  <polygon points="256,274 268,300 256,350 244,300" fill="#3A2410"/>
+  </g>
+</svg>
