@@ -108,6 +108,8 @@
     <string name="send_problem_media_missing">Non envoyé : le fichier n’est plus sur cet appareil. Joignez-le à nouveau.</string>
     <string name="connection_offline">Pas de connexion. Les messages attendent et partiront dès votre retour en ligne.</string>
     <string name="connection_retry">Réessayer</string>
+    <string name="bridge_signed_out">Votre passerelle %1$s est déconnectée. Les messages n’arriveront pas sur %1$s tant que vous ne vous reconnectez pas.</string>
+    <string name="bridge_sign_in">Se connecter</string>
     <string name="timeline_redacted">Message supprimé</string>
     <string name="timeline_undecryptable">Message encore indéchiffrable. Les clés de l’expéditeur ne sont pas arrivées sur cet appareil.</string>
     <string name="timeline_kind_image">Photo</string>

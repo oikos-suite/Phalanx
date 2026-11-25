@@ -168,6 +168,8 @@ class RoomViewModel @Inject constructor(
         if (problem != null) notify(problem) else act { it.retrySend(message) }
     }
 
+    fun canEditNow(message: TimelineEntry.Message): Boolean = session?.canEditNow(message) ?: message.canEdit
+
     fun setPinned(message: TimelineEntry.Message, pinned: Boolean) = act { it.setPinned(message, pinned) }
 
     fun forward(message: TimelineEntry.Message, toRoomId: String) {

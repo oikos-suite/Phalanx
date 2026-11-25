@@ -59,6 +59,12 @@ interface TimelineSession {
      */
     suspend fun sendMedia(media: OutgoingMedia, caption: String?, replyTo: TimelineEntry.Message?): Result<Unit>
 
+    /**
+     * Whether [message] can still be edited now: the SDK allows it, and the network it is bridged
+     * to still takes edits of a message that old (WhatsApp stops after 15 minutes).
+     */
+    fun canEditNow(message: TimelineEntry.Message): Boolean = message.canEdit
+
     /** Replaces the text of this account's [message] with [text], as markdown, as [send] does. */
     suspend fun edit(message: TimelineEntry.Message, text: String, mentions: List<Member> = emptyList()): Result<Unit>
 

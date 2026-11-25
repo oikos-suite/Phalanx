@@ -195,6 +195,7 @@ fun RoomScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             OfflineBanner()
+                            BridgeLoginBanner(header?.bridge, onOpenBotChat = onOpenRoom)
                             UnreadJump(
                                 offer,
                                 onJump = {

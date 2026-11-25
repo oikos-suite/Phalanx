@@ -43,10 +43,12 @@ internal class RustTimelineSession private constructor(
     private val drafts: RustDraftsRepository,
     internal val emotes: SessionEmotes,
     private val bridge: Bridge?,
+    private val editWindows: BridgeEditWindows,
     override val title: String,
     override val isDirect: Boolean
 ) : TimelineSession {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val roomId = room.id()
     private var listenerHandle: TaskHandle? = null
     private val paginating = Mutex()
     private val uploads = Any()
@@ -102,6 +104,9 @@ internal class RustTimelineSession private constructor(
                 }
             }.also { lastUpload = it }
         }.await()
+
+    override fun canEditNow(message: TimelineEntry.Message): Boolean =
+        message.canEdit && (bridge == null || editWindows.allow(roomId, message))
 
     override suspend fun edit(message: TimelineEntry.Message, text: String, mentions: List<Member>): Result<Unit> =
         io {
@@ -257,14 +262,17 @@ internal class RustTimelineSession private constructor(
             settings: SettingsStore,
             attachments: AttachmentPreparer,
             drafts: RustDraftsRepository,
-            roomEmotes: RoomEmotes
+            roomEmotes: RoomEmotes,
+            editWindows: BridgeEditWindows
         ): RustTimelineSession {
             val timeline = room.timeline()
             val title = room.displayName() ?: room.id()
-            val bridge = room.roomInfo().bridge()
+            val info = room.roomInfo()
+            val bridge = info.bridge()
+            if (bridge != null) editWindows.prefetch(room.id(), info.joinedMembersCount.toLong())
             val emotes = roomEmotes.forRoom(room.ownUserId(), room.id(), bridge)
             val session = RustTimelineSession(
-                room, timeline, settings, attachments, drafts, emotes, bridge, title, room.isDirect()
+                room, timeline, settings, attachments, drafts, emotes, bridge, editWindows, title, room.isDirect()
             )
             session.start()
             return session

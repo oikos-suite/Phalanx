@@ -108,6 +108,8 @@
     <string name="send_problem_media_missing">Not sent: the file is no longer on this device. Attach it again.</string>
     <string name="connection_offline">No connection. Messages wait and go out once you’re back online.</string>
     <string name="connection_retry">Retry</string>
+    <string name="bridge_signed_out">Your %1$s bridge is signed out. Messages won’t reach %1$s until you sign in again.</string>
+    <string name="bridge_sign_in">Sign in</string>
     <string name="timeline_redacted">Message deleted</string>
     <string name="timeline_undecryptable">Can’t decrypt this message yet. The sender’s keys haven’t reached this device.</string>
     <string name="timeline_kind_image">Photo</string>

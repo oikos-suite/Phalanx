@@ -31,7 +31,8 @@ internal fun MessageActionsContent(
     onSummarize: (() -> Unit)?,
     onCopyLink: (String) -> Unit,
     onShareLink: (String) -> Unit,
-    onEdit: () -> Unit,
+    /** Null when the message can't be edited (any more: a bridged network's edit window passed). */
+    onEdit: (() -> Unit)?,
     /** Null when the message's versions are not offered: not edited, or the setting is off. */
     onShowVersions: (() -> Unit)?,
     onForward: () -> Unit,
@@ -50,7 +51,7 @@ internal fun MessageActionsContent(
     val actions = buildList {
         if (message.canReply) add(MenuAction(Symbols.Reply, R.string.action_reply, onReply))
         if (message.body is MessageBody.Text) add(MenuAction(Symbols.ContentCopy, R.string.action_copy, onCopy))
-        if (message.canEdit && message.body is MessageBody.Text) {
+        if (onEdit != null && message.body is MessageBody.Text) {
             add(MenuAction(Symbols.Edit, R.string.action_edit, onEdit))
         }
         if (sent && message.body.isForwardable()) {

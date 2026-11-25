@@ -16,8 +16,7 @@ import kotlinx.coroutines.launch
 import org.phalanx.android.data.model.BridgeHealth
 import org.phalanx.android.data.model.BridgeNetwork
 import org.phalanx.android.data.model.BridgeStatus
-import org.phalanx.android.data.model.MessageBody
-import org.phalanx.android.data.model.healthOf
+import org.phalanx.android.data.model.healthIn
 import org.phalanx.android.data.repository.BridgeRepository
 import org.phalanx.android.data.repository.RoomListRepository
 
@@ -37,8 +36,7 @@ class BridgesViewModel @Inject constructor(
     val health: StateFlow<Map<BridgeNetwork, BridgeHealth>> = combine(statuses, roomList.rooms) { all, rooms ->
         all.orEmpty().filterIsInstance<BridgeStatus.Available>().mapNotNull { status ->
             val room = rooms?.firstOrNull { it.id == status.roomId } ?: return@mapNotNull null
-            val said = (room.preview as? MessageBody.Text)?.text?.takeUnless { room.previewIsOwn }
-            status.network to healthOf(said)
+            status.network to healthIn(room)
         }.toMap()
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 

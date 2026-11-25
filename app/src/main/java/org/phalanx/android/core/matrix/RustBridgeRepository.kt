@@ -14,8 +14,10 @@ import kotlinx.serialization.json.put
 import org.matrix.rustcomponents.sdk.ClientException
 import org.matrix.rustcomponents.sdk.RoomException
 import org.matrix.rustcomponents.sdk.use
+import org.phalanx.android.data.model.Bridge
 import org.phalanx.android.data.model.BridgeNetwork
 import org.phalanx.android.data.model.BridgeStatus
+import org.phalanx.android.data.model.botLocalparts
 import org.phalanx.android.data.repository.BridgeRepository
 import org.phalanx.android.data.repository.RoomActionsRepository
 import org.phalanx.android.data.repository.TimelineUnavailableException
@@ -36,16 +38,28 @@ internal class RustBridgeRepository @Inject constructor(
         BridgeNetwork.entries.map { network -> async { statusOf(network, server) } }.awaitAll()
     }
 
+    override suspend fun botChats(): Map<Bridge, String> = withContext(Dispatchers.IO) {
+        val server = try {
+            api.session().userId.substringAfter(':')
+        } catch (_: IOException) {
+            return@withContext emptyMap()
+        }
+        Bridge.entries.mapNotNull { bridge ->
+            bridge.botLocalparts.firstNotNullOfOrNull { dmRoomWith("@$it:$server") }?.let { bridge to it }
+        }.toMap()
+    }
+
+    // A local lookup: no request goes to the server.
+    private fun dmRoomWith(userId: String): String? = try {
+        active.client()?.getDmRoom(userId)?.use { it.id() }
+    } catch (_: ClientException) {
+        null
+    }
+
     private suspend fun statusOf(network: BridgeNetwork, server: String): BridgeStatus {
         val botId = network.botLocalparts.map { "@$it:$server" }.firstOrNull { exists(it) }
             ?: return BridgeStatus.Unavailable(network)
-        val roomId = withContext(Dispatchers.IO) {
-            try {
-                active.client()?.getDmRoom(botId)?.use { it.id() }
-            } catch (_: ClientException) {
-                null
-            }
-        }
+        val roomId = withContext(Dispatchers.IO) { dmRoomWith(botId) }
         return BridgeStatus.Available(network, botId, roomId)
     }
 
