@@ -3,6 +3,7 @@ package org.phalanx.android.core.matrix
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -42,12 +43,16 @@ internal class RustTimelineSession private constructor(
     private val drafts: RustDraftsRepository,
     internal val emotes: SessionEmotes,
     private val bridge: Bridge?,
+    private val editWindows: BridgeEditWindows,
     override val title: String,
     override val isDirect: Boolean
 ) : TimelineSession {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val roomId = room.id()
     private var listenerHandle: TaskHandle? = null
     private val paginating = Mutex()
+    private val uploads = Any()
+    private var lastUpload: Job? = null
 
     private val typingState = RoomTyping(room, room.ownUserId(), scope)
     override val typing: StateFlow<List<Member>> = typingState.members
@@ -80,18 +85,28 @@ internal class RustTimelineSession private constructor(
             }
         }
 
-    // On the session's scope, so leaving the room doesn't stop the upload or leak its files.
+    // On the session's scope, so leaving the room doesn't stop the upload or leak its files. Each
+    // waits for the one asked for before it, so files picked together reach the network in order.
     override suspend fun sendMedia(media: OutgoingMedia, caption: String?, replyTo: TimelineEntry.Message?) =
-        scope.async {
-            try {
-                val prefs = settings.current()
-                val text = caption?.let { if (prefs.stripLinkTrackers) LinkTrackers.strip(it) else it }
-                val html = text?.let { OutgoingMessage.of(it, emptyList(), prefs.markdown, emotes.byShortcode()).html }
-                runCatchingSdk { timeline.upload(media, text, html, replyTo?.eventId).use { it.join() } }
-            } finally {
-                attachments.discard(media)
-            }
+        synchronized(uploads) {
+            val previous = lastUpload
+            scope.async {
+                try {
+                    previous?.join()
+                    val prefs = settings.current()
+                    val text = caption?.let { if (prefs.stripLinkTrackers) LinkTrackers.strip(it) else it }
+                    val html = text?.let {
+                        OutgoingMessage.of(it, emptyList(), prefs.markdown, emotes.byShortcode()).html
+                    }
+                    runCatchingSdk { timeline.upload(media, text, html, replyTo?.eventId).use { it.join() } }
+                } finally {
+                    attachments.discard(media)
+                }
+            }.also { lastUpload = it }
         }.await()
+
+    override fun canEditNow(message: TimelineEntry.Message): Boolean =
+        message.canEdit && (bridge == null || editWindows.allow(roomId, message))
 
     override suspend fun edit(message: TimelineEntry.Message, text: String, mentions: List<Member>): Result<Unit> =
         io {
@@ -247,14 +262,17 @@ internal class RustTimelineSession private constructor(
             settings: SettingsStore,
             attachments: AttachmentPreparer,
             drafts: RustDraftsRepository,
-            roomEmotes: RoomEmotes
+            roomEmotes: RoomEmotes,
+            editWindows: BridgeEditWindows
         ): RustTimelineSession {
             val timeline = room.timeline()
             val title = room.displayName() ?: room.id()
-            val bridge = room.roomInfo().bridge()
+            val info = room.roomInfo()
+            val bridge = info.bridge()
+            if (bridge != null) editWindows.prefetch(room.id(), info.joinedMembersCount.toLong())
             val emotes = roomEmotes.forRoom(room.ownUserId(), room.id(), bridge)
             val session = RustTimelineSession(
-                room, timeline, settings, attachments, drafts, emotes, bridge, title, room.isDirect()
+                room, timeline, settings, attachments, drafts, emotes, bridge, editWindows, title, room.isDirect()
             )
             session.start()
             return session

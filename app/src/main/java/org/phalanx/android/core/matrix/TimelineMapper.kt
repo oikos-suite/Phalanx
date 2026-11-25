@@ -8,6 +8,7 @@ import org.matrix.rustcomponents.sdk.InReplyToDetails
 import org.matrix.rustcomponents.sdk.MsgLikeContent
 import org.matrix.rustcomponents.sdk.MsgLikeKind
 import org.matrix.rustcomponents.sdk.ProfileDetails
+import org.matrix.rustcomponents.sdk.QueueWedgeError
 import org.matrix.rustcomponents.sdk.Reaction
 import org.matrix.rustcomponents.sdk.TimelineItem
 import org.matrix.rustcomponents.sdk.TimelineItemContent
@@ -16,6 +17,7 @@ import org.matrix.rustcomponents.sdk.use
 import org.phalanx.android.data.model.MessageBody
 import org.phalanx.android.data.model.ReactionSummary
 import org.phalanx.android.data.model.ReplyPreview
+import org.phalanx.android.data.model.SendFailure
 import org.phalanx.android.data.model.SendState
 import org.phalanx.android.data.model.TimelineEntry
 import org.phalanx.android.data.model.UnsupportedKind
@@ -62,14 +64,31 @@ private fun EventTimelineItem.toMessage(id: String, context: MappingContext): Ti
         reactions = reactions.map { it.toSummary(context.ownUserId) },
         timestampMillis = timestamp.toLong(),
         isEdited = msgLike.isEdited(),
-        sendState = when (localSendState) {
-            null, is EventSendState.Sent -> SendState.Sent
-            is EventSendState.NotSentYet -> SendState.Sending
-            is EventSendState.SendingFailed -> SendState.Failed
-        },
+        sendState = localSendState.toSendState(),
         canReply = canBeRepliedTo,
-        canEdit = isEditable
+        canEdit = isEditable,
+        sendFailure = localSendState.failure()
     )
+}
+
+// A recoverable failure (the network went away) parks the room's queue until it is enabled again,
+// which happens as soon as sync is back: the message is waiting, not lost.
+private fun EventSendState?.toSendState(): SendState = when (this) {
+    null, is EventSendState.Sent -> SendState.Sent
+    is EventSendState.NotSentYet -> SendState.Sending
+    is EventSendState.SendingFailed -> if (isRecoverable) SendState.Waiting else SendState.Failed
+}
+
+private fun EventSendState?.failure(): SendFailure? =
+    (this as? EventSendState.SendingFailed)?.takeUnless { it.isRecoverable }?.error?.toFailure()
+
+private fun QueueWedgeError.toFailure(): SendFailure = when (this) {
+    is QueueWedgeError.InsecureDevices -> SendFailure.UnverifiedDevices
+    is QueueWedgeError.IdentityViolations -> SendFailure.IdentityChanged
+    QueueWedgeError.CrossVerificationRequired -> SendFailure.VerificationRequired
+    QueueWedgeError.ExpiredAccessToken -> SendFailure.SessionExpired
+    QueueWedgeError.MissingMediaContent -> SendFailure.MediaMissing
+    is QueueWedgeError.InvalidMimeType, is QueueWedgeError.GenericApiError -> SendFailure.Rejected
 }
 
 private fun MsgLikeContent.isEdited(): Boolean =

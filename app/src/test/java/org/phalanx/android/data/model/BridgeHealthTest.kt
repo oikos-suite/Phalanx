@@ -23,4 +23,24 @@ class BridgeHealthTest {
         assertEquals(BridgeHealth.Unknown, healthOf("Scan the QR code below"))
         assertEquals(BridgeHealth.Unknown, healthOf(null))
     }
+
+    @Test
+    fun `the bot chat's latest message counts, unless the user wrote it`() {
+        val bot = chat(MessageBody.Text("Logged out from WhatsApp", null, MessageBody.TextStyle.Notice), own = false)
+        assertEquals(BridgeHealth.LoggedOut, healthIn(bot))
+        assertEquals(BridgeHealth.Unknown, healthIn(bot.copy(previewIsOwn = true)))
+        assertEquals(BridgeHealth.Unknown, healthIn(null))
+    }
+
+    @Test
+    fun `a bridge's bot is looked for under the names deployments use`() {
+        assertEquals(listOf("instagrambot", "metabot"), Bridge.Instagram.botLocalparts)
+        assertEquals(listOf("gmessagesbot"), Bridge.GoogleMessages.botLocalparts)
+    }
+
+    private fun chat(preview: MessageBody, own: Boolean) = RoomSummary(
+        id = "!bot:x", name = "WhatsApp bridge bot", isDirect = true, avatar = null, preview = preview,
+        previewIsOwn = own, previewSender = null, lastActivityMillis = null, unreadCount = 0,
+        highlightCount = 0, isFavourite = false
+    )
 }

@@ -90,6 +90,12 @@ class PersonTimelineSession internal constructor(
 
     override fun setTyping(typing: Boolean) = targetChat.setTyping(typing)
 
+    // Each chat knows its own network's edit window; the message is asked about where it came from.
+    override fun canEditNow(message: TimelineEntry.Message): Boolean {
+        val origin = merged.value.origins[message.id] ?: return false
+        return chats[origin.roomId]?.canEditNow(origin.message) ?: false
+    }
+
     override suspend fun send(text: String, mentions: List<Member>, replyTo: TimelineEntry.Message?): Result<Unit> {
         if (replyTo == null) return targetChat.send(text, mentions, null)
         return on(replyTo) { chat, original -> chat.send(text, mentions, original) }

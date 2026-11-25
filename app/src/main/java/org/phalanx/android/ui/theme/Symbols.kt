@@ -139,6 +139,8 @@ internal object Symbols {
         @Composable get() = ImageVector.vectorResource(R.drawable.sym_edit)
     val DoneAll: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.sym_done_all)
+    val CloudOff: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.sym_cloud_off)
     val Devices: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.sym_devices)
     val Contrast: ImageVector

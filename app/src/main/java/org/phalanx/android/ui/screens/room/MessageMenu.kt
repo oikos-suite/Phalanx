@@ -110,7 +110,8 @@ internal fun MessageMenu(
                 onReact = { key -> then { viewModel.toggleReaction(lifted, key) }() },
                 emotes = emotes,
                 onReply = then { viewModel.composer.reply(lifted) },
-                onEdit = then { liftedText?.let { viewModel.composer.edit(lifted, it) } },
+                onEdit = then { liftedText?.let { viewModel.composer.edit(lifted, it) } }
+                    .takeIf { viewModel.canEditNow(lifted) },
                 onShowVersions = versionsTarget(lifted, settings)?.let { eventId -> then { versionsOf = eventId } },
                 onCopy = then {
                     liftedText?.let(::copy)

@@ -4,7 +4,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -186,15 +188,24 @@ fun RoomScreen(
                             current, padding, actions, marks, viewModel::loadOlder, focus, viewModel::onFocused
                         )
                         val offer by unread.offer.collectAsStateWithLifecycle()
-                        UnreadJump(
-                            offer,
-                            onJump = {
-                                unread.jump(viewModel::jumpTo) { viewModel.notify(R.string.timeline_focus_not_found) }
-                            },
-                            onDismiss = unread::dismiss,
+                        Column(
                             modifier = Modifier.align(Alignment.TopCenter)
-                                .padding(top = padding.calculateTopPadding() + 8.dp)
-                        )
+                                .padding(top = padding.calculateTopPadding() + 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OfflineBanner()
+                            BridgeLoginBanner(header?.bridge, onOpenBotChat = onOpenRoom)
+                            UnreadJump(
+                                offer,
+                                onJump = {
+                                    unread.jump(viewModel::jumpTo) {
+                                        viewModel.notify(R.string.timeline_focus_not_found)
+                                    }
+                                },
+                                onDismiss = unread::dismiss
+                            )
+                        }
                     }
                 }
             }

@@ -13,6 +13,18 @@ fun healthOf(lastBotMessage: String?): BridgeHealth {
     }
 }
 
+/** How the bridge whose bot chat is [botChat] stands, from the bot's latest message there. */
+fun healthIn(botChat: RoomSummary?): BridgeHealth =
+    healthOf((botChat?.takeUnless { it.previewIsOwn }?.preview as? MessageBody.Text)?.text)
+
+/**
+ * The names a [Bridge]'s bot goes by on the homeserver, tried in order: those deployments
+ * commonly use for the networks the app can sign in to, mautrix's default for the rest.
+ */
+val Bridge.botLocalparts: List<String>
+    get() = BridgeNetwork.entries.firstOrNull { it.name == name }?.botLocalparts
+        ?: localparts.map { it + "bot" }
+
 // Checked first: "you're not logged in" contains "logged in".
 private val BROKEN = listOf(
     "not logged in",

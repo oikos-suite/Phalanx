@@ -28,7 +28,11 @@ sealed interface TimelineEntry {
         val canReply: Boolean,
         val canEdit: Boolean,
         /** The other members whose public read receipt sits on this message: it is where they stopped. */
-        val readBy: Set<String> = emptySet()
+        val readBy: Set<String> = emptySet(),
+        /** Why [sendState] is [SendState.Failed]; null otherwise. */
+        val sendFailure: SendFailure? = null,
+        /** For this account's sent messages in a bridged room: what the bridge said of it, if anything. */
+        val bridgeDelivery: BridgeDelivery? = null
     ) : TimelineEntry
 }
 
@@ -55,4 +59,44 @@ data class ReactionSummary(
     val image: MediaRef? = null
 )
 
-enum class SendState { Sent, Sending, Failed }
+enum class SendState {
+    Sent,
+    Sending,
+
+    /** The connection dropped: the SDK holds it and sends it once the server is reachable again. */
+    Waiting,
+    Failed
+}
+
+/** Why a message could not be sent; [retryHelps] is false when sending it again would fail the same way. */
+enum class SendFailure(val retryHelps: Boolean) {
+    /** The room has devices that are not verified, which the encryption settings refuse to share with. */
+    UnverifiedDevices(false),
+
+    /** Someone verified earlier is no longer. */
+    IdentityChanged(false),
+
+    /** This session must be verified before it may send. */
+    VerificationRequired(false),
+
+    /** The sign-in expired; the SDK sends it once it has a working one again. */
+    SessionExpired(true),
+
+    /** The file to upload is gone from the cache. */
+    MediaMissing(false),
+
+    /** The server refused it. */
+    Rejected(true)
+}
+
+/**
+ * What a bridge said of a message it was handed. [Delivered] once the bridge, or someone on the
+ * network, has a read receipt at or after it; [Failed] when its bot answered it with an error notice.
+ */
+@Immutable
+sealed interface BridgeDelivery {
+    data object Delivered : BridgeDelivery
+
+    /** [reason] is the bot's notice, as it wrote it. */
+    data class Failed(val reason: String) : BridgeDelivery
+}
