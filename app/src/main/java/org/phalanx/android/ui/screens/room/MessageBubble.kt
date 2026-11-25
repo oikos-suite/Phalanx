@@ -13,11 +13,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,19 +32,16 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import org.phalanx.android.R
 import org.phalanx.android.data.model.SendState
 import org.phalanx.android.data.model.TimelineEntry
 import org.phalanx.android.ui.components.MatrixAvatar
 import org.phalanx.android.ui.theme.LocalReducedMotion
-import org.phalanx.android.ui.theme.Symbols
 
 private val LargeRadius = 24.dp
 private val SeamRadius = 6.dp
@@ -105,8 +100,8 @@ internal fun MessageBubble(
             }
             if (own) {
                 SendStatus(
-                    state = message.sendState,
-                    onRetry = { actions.onRetry(message) },
+                    message = message,
+                    onTap = { actions.onRetry(message) },
                     modifier = Modifier.padding(end = 6.dp, bottom = 6.dp)
                 )
             }
@@ -159,26 +154,6 @@ private fun Modifier.appear(isNew: Boolean, own: Boolean, sent: Boolean): Modifi
         scaleX = APPEAR_SCALE + (1f - APPEAR_SCALE) * value
         scaleY = APPEAR_SCALE + (1f - APPEAR_SCALE) * value
         alpha = value.coerceIn(0f, 1f)
-    }
-}
-
-/** Only shown while something is pending or wrong; a sent message needs no badge. */
-@Composable
-private fun SendStatus(state: SendState, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    when (state) {
-        SendState.Sent -> Unit
-        SendState.Sending -> Icon(
-            Symbols.Schedule,
-            contentDescription = stringResource(R.string.timeline_sending),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = modifier.size(14.dp)
-        )
-        SendState.Failed -> Icon(
-            Symbols.ErrorOutline,
-            contentDescription = stringResource(R.string.timeline_failed),
-            tint = MaterialTheme.colorScheme.error,
-            modifier = modifier.size(16.dp).clickable(role = Role.Button, onClick = onRetry)
-        )
     }
 }
 

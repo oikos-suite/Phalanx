@@ -227,19 +227,10 @@ internal class ComposerController(
             return
         }
         // Media goes into the SDK's send queue and shows in the timeline at once, so the composer
-        // empties right away. One file takes the text as its caption; several get it as a message first.
+        // empties right away.
         update { state -> ComposerState(attachments = state.attachments.filter { it.media == null }) }
-        val caption = text.takeIf { it.isNotEmpty() && media.size == 1 }
         scope.launch {
-            if (caption == null && text.isNotEmpty()) {
-                current.send(text, snapshot.mentions, replyTo).onFailure { notify(SEND_FAILED) }
-            }
-            media.forEachIndexed { index, item ->
-                launch {
-                    current.sendMedia(item, caption, replyTo.takeIf { index == 0 && caption != null })
-                        .onFailure { notify(SEND_FAILED) }
-                }
-            }
+            if (!current.sendBatch(media, text, snapshot.mentions, replyTo)) notify(SEND_FAILED)
         }
     }
 

@@ -17,7 +17,7 @@ internal class MessageActions(
     val onVote: (TimelineEntry.Message, List<String>) -> Unit,
     val onShowReactors: (TimelineEntry.Message, String) -> Unit,
     val onReply: (TimelineEntry.Message) -> Unit,
-    /** A message that failed to send was tapped: send it again. */
+    /** The mark of a message that failed to send, or to bridge, was tapped. */
     val onRetry: (TimelineEntry.Message) -> Unit,
     val onLongPress: (TimelineEntry.Message) -> Unit,
     /** A mention, an avatar or a sender's name was tapped. */

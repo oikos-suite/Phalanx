@@ -18,7 +18,7 @@ internal class TimelineItems(private val context: MappingContext) {
     fun apply(diffs: List<TimelineDiff>) {
         synchronized(lock) {
             diffs.forEach(::applyOne)
-            mutableEntries.value = entriesOf(items)
+            mutableEntries.value = entriesOf(items).withBridgeDelivery()
         }
     }
 

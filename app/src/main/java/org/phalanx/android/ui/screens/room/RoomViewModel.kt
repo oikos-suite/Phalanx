@@ -162,7 +162,11 @@ class RoomViewModel @Inject constructor(
 
     fun redact(message: TimelineEntry.Message) = act { it.redact(message) }
 
-    fun retrySend(message: TimelineEntry.Message) = act { it.retrySend(message) }
+    /** A message's send status was tapped: why it can't go when retrying won't help, else retry. */
+    fun retrySend(message: TimelineEntry.Message) {
+        val problem = sendProblemOf(message)
+        if (problem != null) notify(problem) else act { it.retrySend(message) }
+    }
 
     fun setPinned(message: TimelineEntry.Message, pinned: Boolean) = act { it.setPinned(message, pinned) }
 

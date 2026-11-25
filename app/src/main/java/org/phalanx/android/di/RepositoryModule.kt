@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.phalanx.android.core.contacts.PeopleStore
 import org.phalanx.android.core.matrix.AccountBookmarks
+import org.phalanx.android.core.matrix.ConnectionKeeper
 import org.phalanx.android.core.matrix.MessageArchive
 import org.phalanx.android.core.matrix.PushRulesMutedUsersRepository
 import org.phalanx.android.core.matrix.ReactionPushRule
@@ -32,6 +33,7 @@ import org.phalanx.android.data.repository.AuthRepository
 import org.phalanx.android.data.repository.BlockedUsersRepository
 import org.phalanx.android.data.repository.BookmarkRepository
 import org.phalanx.android.data.repository.BridgeRepository
+import org.phalanx.android.data.repository.ConnectionRepository
 import org.phalanx.android.data.repository.DeletedMessagesRepository
 import org.phalanx.android.data.repository.DraftsRepository
 import org.phalanx.android.data.repository.EditHistoryRepository
@@ -122,4 +124,7 @@ internal abstract class RepositoryModule {
 
     @Binds
     abstract fun linkPreviewRepository(impl: RustLinkPreviewRepository): LinkPreviewRepository
+
+    @Binds
+    abstract fun connectionRepository(impl: ConnectionKeeper): ConnectionRepository
 }

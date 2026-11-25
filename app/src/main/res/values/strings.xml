@@ -98,6 +98,16 @@
     <string name="timeline_edited">edited</string>
     <string name="timeline_sending">Sending…</string>
     <string name="timeline_failed">Not sent. Tap to retry.</string>
+    <string name="timeline_waiting">Waiting for a connection. It will send once you’re back online.</string>
+    <string name="timeline_bridged">Delivered by the bridge</string>
+    <string name="timeline_not_bridged">The bridge couldn’t deliver this. Tap for details.</string>
+    <string name="send_problem_not_bridged">The bridge didn’t deliver this message to the other network. Its bot’s reply below it says why.</string>
+    <string name="send_problem_unverified_devices">Not sent: someone in this chat uses a device that isn’t verified, and your settings refuse to encrypt for it.</string>
+    <string name="send_problem_identity_changed">Not sent: someone you verified has a new identity. Check it in their profile before sending again.</string>
+    <string name="send_problem_verification_required">Not sent: verify this device first, from Settings → Security and recovery.</string>
+    <string name="send_problem_media_missing">Not sent: the file is no longer on this device. Attach it again.</string>
+    <string name="connection_offline">No connection. Messages wait and go out once you’re back online.</string>
+    <string name="connection_retry">Retry</string>
     <string name="timeline_redacted">Message deleted</string>
     <string name="timeline_undecryptable">Can’t decrypt this message yet. The sender’s keys haven’t reached this device.</string>
     <string name="timeline_kind_image">Photo</string>
